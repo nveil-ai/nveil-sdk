@@ -1,0 +1,105 @@
+NVEIL SOFTWARE LICENSE AGREEMENT
+
+Version 1.0 — Effective April 2026
+
+Copyright (c) 2025-2026 NVEIL SAS. All rights reserved.
+
+By installing or using the NVEIL SDK and its bundled libraries
+("Software"), you agree to the following terms.
+
+
+1. LICENSE GRANT
+
+NVEIL grants you a limited, non-exclusive, non-transferable,
+revocable license to:
+
+  (a) Install and use the Software to develop applications that
+      connect to the NVEIL platform via authorized API keys.
+
+  (b) Distribute applications that include the Software as a
+      runtime dependency, for both commercial and non-commercial
+      purposes.
+
+
+2. RESTRICTIONS
+
+You may not:
+
+  (a) Reverse engineer, decompile, disassemble, or attempt to
+      derive the source code of any compiled component of the
+      Software, including but not limited to the visualization
+      engine and data processing libraries.
+
+  (b) Modify, adapt, or create derivative works of the Software.
+
+  (c) Remove or alter any copyright, trademark, or other
+      proprietary notices contained in the Software.
+
+  (d) Redistribute the Software as a standalone package or
+      include it in a software distribution unrelated to your
+      application.
+
+  (e) Use the Software to develop a product or service that
+      competes with or substitutes for the NVEIL platform.
+
+  (f) Share, publish, or transfer your API key to unauthorized
+      third parties.
+
+
+3. API KEY AND USAGE
+
+The Software requires a valid API key issued through the NVEIL
+platform (https://app.nveil.com). Usage is subject to the rate
+limits and terms associated with your account. NVEIL may revoke
+API keys that violate these terms.
+
+
+4. INTELLECTUAL PROPERTY
+
+The Software, including all algorithms, data formats, compiled
+libraries, and documentation, is and remains the exclusive
+intellectual property of NVEIL SAS. This license does not convey
+any ownership rights.
+
+
+5. DATA PRIVACY
+
+The Software is designed so that your raw data is processed
+locally. Only metadata (column names, types, and aggregate
+statistics) is transmitted to the NVEIL server. NVEIL does not
+store or access your raw data.
+
+
+6. DISCLAIMER OF WARRANTIES
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+NON-INFRINGEMENT. NVEIL DOES NOT WARRANT THAT THE SOFTWARE
+WILL BE ERROR-FREE OR UNINTERRUPTED.
+
+
+7. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL NVEIL BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR
+USE OF THE SOFTWARE, REGARDLESS OF THE CAUSE OF ACTION.
+
+
+8. TERMINATION
+
+This license is effective until terminated. It terminates
+automatically if you breach any of its terms. NVEIL may also
+terminate it at any time by providing notice. Upon termination,
+you must cease all use of the Software and destroy all copies.
+
+
+9. GOVERNING LAW
+
+This agreement is governed by the laws of France. Any disputes
+shall be subject to the exclusive jurisdiction of the courts
+of Paris, France.
+
+
+Contact: contact@nveil.com
+Website: https://nveil.com

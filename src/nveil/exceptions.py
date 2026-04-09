@@ -1,0 +1,25 @@
+"""NVEIL SDK exceptions."""
+
+
+class NveilError(Exception):
+    """Base exception for all NVEIL SDK errors."""
+
+
+class AuthenticationError(NveilError):
+    """Raised when the API key is invalid, expired, or revoked."""
+
+
+class ScopeError(NveilError):
+    """Raised when the API key is missing a required scope."""
+
+
+class QuotaExceededError(NveilError):
+    """Raised when the rate limit or quota is exceeded."""
+
+
+class SpecGenerationError(NveilError):
+    """Raised when the server fails to generate a specification."""
+
+
+class IncompatibleDataError(NveilError):
+    """Raised when data columns don't match the spec's expected schema."""

@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel", "Cython>=3.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nveil"
+dynamic = ["version", "dependencies"]
+description = "AI-powered data visualization — describe what you want, get production charts. Data stays local."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Proprietary"}
+authors = [{name = "NVEIL", email = "contact@nveil.com"}]
+keywords = [
+    "visualization", "data-visualization", "ai", "charts", "plotly",
+    "vtk", "deckgl", "pandas", "data-science", "no-code",
+    "machine-learning", "geospatial", "3d", "scientific-visualization",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "License :: Other/Proprietary License",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://nveil.com"
+Documentation = "https://docs.nveil.com"
+"API Reference" = "https://docs.nveil.com/api-reference/"
+Changelog = "https://docs.nveil.com/changelog/"
+
+[project.optional-dependencies]
+agent = ["watchdog>=3.0", "pystray>=0.19"]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.0",
+    "mkdocs-section-index>=0.3",
+    "mkdocstrings[python]>=0.24",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "e2e: end-to-end tests requiring a running server",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
