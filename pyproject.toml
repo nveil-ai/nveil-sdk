@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel", "Cython>=3.0"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -34,11 +34,12 @@ classifiers = [
 [project.urls]
 Homepage = "https://nveil.com"
 Documentation = "https://docs.nveil.com"
+Source = "https://github.com/nveil-ai/nveil-sdk"
+Issues = "https://github.com/nveil-ai/nveil-sdk/issues"
 "API Reference" = "https://docs.nveil.com/api-reference/"
 Changelog = "https://docs.nveil.com/changelog/"
 
 [project.optional-dependencies]
-agent = ["watchdog>=3.0", "pystray>=0.19"]
 docs = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.0",

@@ -126,7 +126,27 @@ def save_image(
         raise RuntimeError("No figure to export")
 
     from dive.builder.export import export_to_file
-    export_to_file(fig, path, theme=theme, width=width, height=height, scale=scale)
+
+    try:
+        export_to_file(fig, path, theme=theme, width=width, height=height, scale=scale)
+    except RuntimeError as e:
+        if "Chrome" in str(e) or "kaleido" in str(e).lower():
+            # Auto-install Chrome for kaleido and retry
+            import logging
+            log = logging.getLogger("nveil")
+            log.info("Installing Chromium for static image export (one-time setup)...")
+            try:
+                import kaleido
+                kaleido.get_chrome_sync()
+                export_to_file(fig, path, theme=theme, width=width, height=height, scale=scale)
+            except Exception as install_err:
+                raise RuntimeError(
+                    "Static image export requires Chromium. Auto-install failed.\n"
+                    "Run manually: python -c \"import kaleido; kaleido.get_chrome_sync()\"\n"
+                    "Or save as HTML instead: nveil.save_html(fig, 'chart.html')"
+                ) from install_err
+        else:
+            raise
 
 
 def save_html(fig: Any, path: str, theme: str = "dark") -> None:

@@ -20,6 +20,7 @@ Usage::
 
 import logging as _logging
 import os as _os
+import warnings as _warnings
 from typing import Any
 
 from importlib.metadata import version as _pkg_version
@@ -36,6 +37,15 @@ if not _os.environ.get("NVEIL_VERBOSE"):
     ):
         _logging.getLogger(_name).setLevel(_logging.WARNING)
     _logging.getLogger().setLevel(_logging.WARNING)
+
+    # Suppress pandas 3.x ChainedAssignmentError warnings raised from internal
+    # dive/choregraph operations. These are cosmetic — the operations work
+    # correctly. Users can re-enable by setting NVEIL_VERBOSE=1.
+    try:
+        from pandas.errors import ChainedAssignmentError as _CAE
+        _warnings.filterwarnings("ignore", category=_CAE)
+    except ImportError:
+        pass
 
 from .client import NveilClient
 from .exceptions import (
