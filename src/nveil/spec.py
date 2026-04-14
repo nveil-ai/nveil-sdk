@@ -150,6 +150,8 @@ def save_image(
                 subprocess.run(
                     [sys.executable, "-m", "playwright", "install", "chromium"],
                     check=True,
+                    stdout=sys.stderr,
+                    stderr=sys.stderr,
                 )
                 export_to_file(fig, path, theme=theme, width=width, height=height, scale=scale)
             except Exception as install_err:
