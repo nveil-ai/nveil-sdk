@@ -1,4 +1,4 @@
-"""NVEIL Python SDK — no-code AI data visualization.
+"""NVEIL Toolkit — no-code AI data visualization.
 
 Usage::
 
@@ -82,6 +82,26 @@ _client: NveilClient | None = None
 _timing_enabled: bool = False
 
 
+def _warn_missing_extras() -> None:
+    """Print a one-time hint when optional heavy extras are not installed.
+
+    Fires inside ``configure()`` so it appears exactly once per script,
+    at the moment the user has already expressed intent to use the Toolkit.
+    pip has no reliable post-install hook for wheel-based installs, so
+    this is the best available substitute.
+    """
+    try:
+        import vtk  # noqa: F401
+    except ImportError:
+        import sys
+        print(
+            "\n[nveil] Tip: 3D visualizations (voxel, 3D scatter/lines, 3D vector field)\n"
+            "        require VTK, which is not installed. To enable them run:\n"
+            "            pip install 'nveil[extra]'\n",
+            file=sys.stderr,
+        )
+
+
 def configure(
     api_key: str,
     base_url: str = "https://app.nveil.com",
@@ -105,6 +125,7 @@ def configure(
         for name in ("kedro", "kedro.io", "kedro.runner", "kedro.pipeline", "kedro.framework"):
             _logging.getLogger(name).setLevel(_logging.INFO)
     _client = NveilClient(api_key=api_key, base_url=base_url, verify=verify, **kwargs)
+    _warn_missing_extras()
 
 
 def _get_client() -> NveilClient:
@@ -133,18 +154,37 @@ def session() -> Session:
     return Session(client=_client, timing=_timing_enabled)
 
 
-def _normalize_to_dict(data) -> dict:
-    """Normalize input to a dict of named DataFrames."""
+def _normalize_inputs(data) -> dict:
+    """Normalize user input to a dict mapping dataset name → DataFrame or file path.
+
+    Accepts:
+        - ``pd.DataFrame`` → ``{"dataset": df}``
+        - ``str`` / ``pathlib.Path`` (path to CSV/Parquet/JSON/Excel) → ``{"dataset": path}``
+        - ``dict`` where each value is a DataFrame, path, or path-like value
+        - ``np.ndarray`` / ``list`` / ``list[list]`` → ``{"dataset": df}``
+
+    Path values are passed through unchanged so the engine can register them
+    as path-backed choregraph inputs (no DataFrame held in the caller's RAM).
+    """
+    import os
+    from pathlib import Path as _Path
     import pandas as pd
     import numpy as np
 
+    def _looks_like_path(v):
+        return isinstance(v, (str, os.PathLike)) and not isinstance(v, bytes)
+
     if isinstance(data, pd.DataFrame):
         return {"dataset": data}
+    if _looks_like_path(data):
+        return {"dataset": _Path(data)}
     if isinstance(data, dict):
         result = {}
         for name, value in data.items():
             if isinstance(value, pd.DataFrame):
                 result[name] = value
+            elif _looks_like_path(value):
+                result[name] = _Path(value)
             else:
                 result[name] = pd.DataFrame(value)
         return result
@@ -154,7 +194,7 @@ def _normalize_to_dict(data) -> dict:
         if data and isinstance(data[0], (list, tuple)):
             return {"dataset": pd.DataFrame(data[1:], columns=data[0])}
         return {"dataset": pd.DataFrame(data)}
-    raise TypeError(f"Cannot convert {type(data).__name__} to DataFrame")
+    raise TypeError(f"Cannot convert {type(data).__name__} to a dataset")
 
 
 _MAX_RETRIES = 2
@@ -166,12 +206,16 @@ def generate_spec(prompt: str, data: Any) -> NveilSpec:
     Only metadata leaves your machine — never raw data.
     All internal processing is handled by the compiled engine.
 
-    If the server-generated data pipeline fails locally, the SDK retries
+    If the server-generated data pipeline fails locally, the Toolkit retries
     with a new server call (the plan is non-deterministic).
 
     Args:
         prompt: Natural language description of the desired visualization.
-        data: pandas DataFrame, dict of DataFrames, numpy array, or list of lists.
+        data: pandas DataFrame, dict of DataFrames, numpy array, list of lists,
+            or a path (``str`` / ``pathlib.Path``) to a CSV / Parquet / JSON /
+            Excel file. A dict of paths is also accepted for multi-dataset
+            inputs. Path inputs avoid holding the DataFrame in your process
+            — the engine registers them as disk-backed choregraph inputs.
 
     Returns:
         NveilSpec that can render locally and be saved/reused.
@@ -182,11 +226,11 @@ def generate_spec(prompt: str, data: Any) -> NveilSpec:
 
     log = logging.getLogger("nveil")
     client = _get_client()
-    dataframes = _normalize_to_dict(data)
+    inputs = _normalize_inputs(data)
     last_error = None
 
     for attempt in range(_MAX_RETRIES + 1):
-        workspace = prepare(dataframes)
+        workspace = prepare(inputs)
 
         try:
             # Step 1: Send request to server for processing plan
@@ -221,6 +265,14 @@ def generate_spec(prompt: str, data: Any) -> NveilSpec:
             return NveilSpec(spec_blob=spec_blob)
 
         except RuntimeError as e:
+            # If the root cause is a missing optional dependency, retrying is
+            # pointless — the package won't appear on its own. Surface it
+            # immediately with a clean message instead of burning all retries.
+            from choregraph._extras import find_import_error
+            import_err = find_import_error(e)
+            if import_err is not None:
+                raise SpecGenerationError(str(import_err)) from None
+
             last_error = e
             if attempt < _MAX_RETRIES:
                 log.warning(

@@ -1,8 +1,8 @@
-"""NVEIL SDK exceptions."""
+"""NVEIL Toolkit exceptions."""
 
 
 class NveilError(Exception):
-    """Base exception for all NVEIL SDK errors."""
+    """Base exception for all NVEIL Toolkit errors."""
 
 
 class AuthenticationError(NveilError):

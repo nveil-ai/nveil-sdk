@@ -31,11 +31,14 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.scripts]
+nveil = "nveil.cli.main:main"
+
 [project.urls]
 Homepage = "https://nveil.com"
 Documentation = "https://docs.nveil.com"
-Source = "https://github.com/nveil-ai/nveil-sdk"
-Issues = "https://github.com/nveil-ai/nveil-sdk/issues"
+Source = "https://github.com/nveil-ai/nveil-toolkit"
+Issues = "https://github.com/nveil-ai/nveil-toolkit/issues"
 "API Reference" = "https://docs.nveil.com/api-reference/"
 Changelog = "https://docs.nveil.com/changelog/"
 
@@ -56,3 +59,10 @@ markers = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+nveil = [
+    "skills/nveil/SKILL.md",
+    ".claude-plugin/plugin.json",
+    ".mcp.json",
+]

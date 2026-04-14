@@ -1,4 +1,4 @@
-"""Lightweight timing instrumentation for the NVEIL SDK.
+"""Lightweight timing instrumentation for the NVEIL Toolkit.
 
 Controlled via ``nveil.configure(timing=True)``. When disabled (default),
 all operations are no-ops with zero overhead.

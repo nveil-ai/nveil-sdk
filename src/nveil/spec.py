@@ -3,7 +3,7 @@
 Once generated, a spec can be reused unlimited times on new data with
 compatible columns — no API call, no cost.
 
-All internal processing is handled by the compiled engine. The SDK
+All internal processing is handled by the compiled engine. The Toolkit
 only stores and passes opaque byte blobs.
 """
 
@@ -24,7 +24,7 @@ class NveilSpec:
         self._session = None  # set by Session.generate_spec for workspace reuse
 
     def render(self, data: Any = None) -> Any:
-        """Render using the auto-detected best backend (Plotly, VTK, DeckGL).
+        """Render using the auto-detected best backend (ECharts, VTK, DeckGL).
 
         100% local execution — no API call.
 
@@ -36,7 +36,8 @@ class NveilSpec:
             data: pandas DataFrame, dict of DataFrames, numpy array, or list.
 
         Returns:
-            Backend-specific figure object (plotly.graph_objects.Figure, etc.)
+            Backend-specific figure object (ECharts option dict, pydeck
+            ``Deck`` / ``Layer``, VTK viz dict, or graph / html payload).
         """
         from dive._engine import render as engine_render
         from .timing import Timer
@@ -87,6 +88,11 @@ def show(fig: Any, theme: str = "dark") -> None:
     if fig is None:
         raise RuntimeError("No figure to display")
 
+    if isinstance(fig, dict) and ("mapper" in fig or "volume" in fig):
+        from dive.builder.export import show_vtk_window
+        show_vtk_window(fig, theme=theme)
+        return
+
     import tempfile
     import webbrowser
     from dive.builder.export import export_image
@@ -112,7 +118,12 @@ def save_image(
     """Save a figure as a static image.
 
     Format is inferred from the file extension.
-    Supported: .png, .jpg, .svg, .pdf (require kaleido), .html
+    Supported: .png, .jpg, .svg, .pdf, .html, .json
+
+    Raster / vector formats (png, jpg, svg, pdf) render the figure via
+    a headless Chromium instance provided by Playwright. The first run
+    downloads Chromium one time (~170 MB); after that exports are local
+    and offline.
 
     Args:
         fig: Figure object returned by ``NveilSpec.render()``.
@@ -120,7 +131,7 @@ def save_image(
         theme: Export theme ("dark" or "light").
         width: Image width in pixels.
         height: Image height in pixels.
-        scale: Font/margin scale factor.
+        scale: Device scale factor for raster exports (1 = 1×, 2 = retina).
     """
     if fig is None:
         raise RuntimeError("No figure to export")
@@ -130,23 +141,52 @@ def save_image(
     try:
         export_to_file(fig, path, theme=theme, width=width, height=height, scale=scale)
     except RuntimeError as e:
-        if "Chrome" in str(e) or "kaleido" in str(e).lower():
-            # Auto-install Chrome for kaleido and retry
-            import logging
-            log = logging.getLogger("nveil")
-            log.info("Installing Chromium for static image export (one-time setup)...")
+        msg = str(e).lower()
+        if "playwright" in msg or "chromium" in msg:
+            _print_chromium_install_banner()
             try:
-                import kaleido
-                kaleido.get_chrome_sync()
+                import subprocess
+                import sys
+                subprocess.run(
+                    [sys.executable, "-m", "playwright", "install", "chromium"],
+                    check=True,
+                )
                 export_to_file(fig, path, theme=theme, width=width, height=height, scale=scale)
             except Exception as install_err:
                 raise RuntimeError(
-                    "Static image export requires Chromium. Auto-install failed.\n"
-                    "Run manually: python -c \"import kaleido; kaleido.get_chrome_sync()\"\n"
+                    "Static image export requires Playwright + Chromium. "
+                    "Auto-install failed.\n"
+                    "Run manually: playwright install chromium\n"
                     "Or save as HTML instead: nveil.save_html(fig, 'chart.html')"
                 ) from install_err
         else:
             raise
+
+
+def _print_chromium_install_banner() -> None:
+    """Visible one-time notice before the Playwright Chromium download.
+
+    Printed via ``sys.stderr`` so it shows up regardless of logging
+    configuration. Users otherwise see a silent ~30–60s pause and
+    assume the script hung.
+    """
+    import sys
+    banner = (
+        "\n"
+        "┌──────────────────────────────────────────────────────────────┐\n"
+        "│  NVEIL — one-time setup                                      │\n"
+        "├──────────────────────────────────────────────────────────────┤\n"
+        "│  Downloading Chromium via Playwright (~170 MB)               │\n"
+        "│  Needed by nveil.save_image() to render charts to PNG / JPG  │\n"
+        "│  / SVG / PDF server-side. Cached locally after this run —    │\n"
+        "│  future exports are instant and offline.                     │\n"
+        "│                                                              │\n"
+        "│  Skip this step next time by pre-installing:                 │\n"
+        "│      playwright install chromium                             │\n"
+        "└──────────────────────────────────────────────────────────────┘\n"
+    )
+    sys.stderr.write(banner)
+    sys.stderr.flush()
 
 
 def save_html(fig: Any, path: str, theme: str = "dark") -> None:

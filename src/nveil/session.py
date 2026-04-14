@@ -65,7 +65,9 @@ class Session:
 
         Args:
             prompt: Natural language visualization request.
-            data: pandas DataFrame, dict of DataFrames, or compatible input.
+            data: pandas DataFrame, dict of DataFrames, path (``str`` /
+                ``pathlib.Path``) to a CSV/Parquet/JSON/Excel file, or a
+                dict mixing those types.
 
         Returns:
             NveilSpec bound to this session's workspace.
@@ -73,16 +75,16 @@ class Session:
         import logging
         import shutil
         from dive._engine import prepare, apply_plan, finalize
-        from . import _normalize_to_dict, _MAX_RETRIES
+        from . import _normalize_inputs, _MAX_RETRIES
 
         log = logging.getLogger("nveil")
         client = self._get_client()
-        dataframes = _normalize_to_dict(data)
+        inputs = _normalize_inputs(data)
         last_error = None
 
         for attempt in range(_MAX_RETRIES + 1):
             with self.timer.measure("build workspace"):
-                workspace = prepare(dataframes)
+                workspace = prepare(inputs)
 
             try:
                 with self.timer.measure("API: processing plan"):
