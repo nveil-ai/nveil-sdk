@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="NVEIL" width="180">
+  <img src="https://raw.githubusercontent.com/nveil-ai/nveil-toolkit/main/assets/logo.png" alt="NVEIL" width="180">
 </p>
 
 <h1 align="center">NVEIL Toolkit</h1>
@@ -70,7 +70,7 @@ nveil mcp                    # stdio server; launched by the MCP client
 ```
 
 <p align="center">
-  <img src="assets/dashboard.png" alt="NVEIL multi-panel dashboard with charts, heatmaps, and flow diagrams" width="800">
+  <img src="https://raw.githubusercontent.com/nveil-ai/nveil-toolkit/main/assets/dashboard.png" alt="NVEIL multi-panel dashboard with charts, heatmaps, and flow diagrams" width="800">
 </p>
 
 ## Why NVEIL?
@@ -136,7 +136,7 @@ Save to `.nveil` files, reload later, render on new data — no server needed.
 ## Beyond Simple Charts
 
 <p align="center">
-  <img src="assets/ai-chat.png" alt="NVEIL AI chat — conversational data exploration with geospatial heatmaps" width="800">
+  <img src="https://raw.githubusercontent.com/nveil-ai/nveil-toolkit/main/assets/ai-chat.png" alt="NVEIL AI chat — conversational data exploration with geospatial heatmaps" width="800">
 </p>
 
 NVEIL handles geospatial heatmaps, 3D volumes, scientific visualizations, medical imaging (DICOM), network graphs, and 50+ other visualization types — all from natural language.
