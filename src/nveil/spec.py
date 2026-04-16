@@ -129,9 +129,17 @@ def save_image(
         fig: Figure object returned by ``NveilSpec.render()``.
         path: Output file path (e.g. ``"chart.png"``).
         theme: Export theme ("dark" or "light").
-        width: Image width in pixels.
-        height: Image height in pixels.
-        scale: Device scale factor for raster exports (1 = 1×, 2 = retina).
+        width: Output image width in pixels. Always honored exactly —
+            this is the final pixel dimension of the saved file.
+        height: Output image height in pixels. Same contract as ``width``.
+        scale: Font / zoom factor — how large text and chart elements
+            appear relative to the chart area. Internally mapped to
+            Chromium's ``deviceScaleFactor``: the CSS viewport shrinks
+            to ``(width / scale, height / scale)`` while the rasteriser
+            multiplies back to ``width × height`` device pixels. At
+            ``scale=2`` text looks twice as prominent inside the same
+            chart, not twice as many pixels. ``scale=1`` is the native
+            layout; values above 2 rarely add visual quality.
     """
     if fig is None:
         raise RuntimeError("No figure to export")

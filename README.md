@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.nveil-ai/nveil -->
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/nveil-ai/nveil-toolkit/main/assets/logo.png" alt="NVEIL" width="180">
 </p>
