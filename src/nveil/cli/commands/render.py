@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from ..config import configure_from_args
-from .generate import _VALID_FORMATS, _resolve_output_paths, _slug
+from .generate import _parse_output, _RENDER_ALL_FORMATS, _resolve_output_paths, _slug
 
 
 NAME = "render"
@@ -25,11 +25,11 @@ def register(subparsers) -> None:
     p.add_argument("--data", required=True, help="Path to a compatible data file.")
     p.add_argument(
         "-o", "--output",
-        help="Output path or directory. Default: ./nveil_out/<spec-stem>.<ext>",
-    )
-    p.add_argument(
-        "-f", "--format", choices=_VALID_FORMATS, default="html",
-        help="Output format. 'all' writes html + png.",
+        help=(
+            "Output path with optional format brackets. Examples: output.[all], output.[png], "
+            "output.[html,pdf]. Supported formats: html, png, jpg, svg, pdf, json. "
+            ".[all] writes all formats. Default: ./nveil_out/<spec-stem>.html"
+        ),
     )
     p.add_argument("--api-key", help="Unused for offline render; accepted for symmetry.")
     p.set_defaults(_run=run)
@@ -54,17 +54,22 @@ def run(args) -> int:
 
     import nveil
 
-    spec = nveil.load_spec(str(spec_path))
-    formats = ("html", "png") if args.format == "all" else (args.format,)
-    # "nveil" format is a no-op on render (the file is already the spec itself).
-    formats = tuple(f for f in formats if f != "nveil")
+    bracket_base, formats = _parse_output(args.output, _RENDER_ALL_FORMATS)
+    if formats is None:
+        return 1
 
-    out_paths = _resolve_output_paths(args.output, spec_path.stem, formats)
+    out_paths = _resolve_output_paths(args.output, spec_path.stem, formats, bracket_base)
+
+    spec = nveil.load_spec(str(spec_path))
     fig = spec.render(data_path)
+
     if "html" in out_paths:
         nveil.save_html(fig, str(out_paths["html"]))
         print(str(out_paths["html"]))
-    if "png" in out_paths:
-        nveil.save_image(fig, str(out_paths["png"]))
-        print(str(out_paths["png"]))
+    for fmt in out_paths:
+        if fmt == "html":
+            continue
+        nveil.save_image(fig, str(out_paths[fmt]))
+        print(str(out_paths[fmt]))
+
     return 0

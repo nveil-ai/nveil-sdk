@@ -141,7 +141,7 @@ Save to `.nveil` files, reload later, render on new data — no server needed.
   <img src="https://raw.githubusercontent.com/nveil-ai/nveil-toolkit/main/assets/ai-chat.png" alt="NVEIL AI chat — conversational data exploration with geospatial heatmaps" width="800">
 </p>
 
-NVEIL handles geospatial heatmaps, 3D volumes, scientific visualizations, medical imaging (DICOM), network graphs, and 50+ other visualization types — all from natural language.
+NVEIL handles geospatial heatmaps, 3D volumes, scientific visualizations, medical imaging (DICOM), biosignal data (EDF/EDF+), network graphs, and 50+ other visualization types — all from natural language.
 
 ## Save Once, Render Forever
 

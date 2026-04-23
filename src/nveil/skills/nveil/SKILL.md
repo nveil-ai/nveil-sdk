@@ -40,6 +40,7 @@ Input data can be:
 - **Tables** — CSV, Parquet, JSON, Excel, and pandas DataFrames.
 - **Multi-dataset** — pass a dict of files or DataFrames for joins.
 - **Volumes & medical** — MHD, DICOM for voxel / volume rendering.
+- **Biosignal** — EDF/EDF+ for multi-channel time-series (EEG, ECG, PSG).
 - **Images** — PNG, JPG, TIFF, WebP for image-field overlays.
 - **Geo** — city names or lat/lon pairs for auto-geocoded maps.
 

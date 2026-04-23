@@ -10,7 +10,9 @@ from ..config import configure_from_args
 
 
 NAME = "generate"
-_VALID_FORMATS = ("html", "png", "nveil", "all")
+_BRACKET_RE = re.compile(r"^(.*)\.\[([^\]]+)\]$")
+_ALL_FORMATS = ("html", "png", "nveil", "jpg", "svg", "pdf", "json")
+_RENDER_ALL_FORMATS = ("html", "png", "jpg", "svg", "pdf", "json")
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 
@@ -31,11 +33,11 @@ def register(subparsers) -> None:
     )
     p.add_argument(
         "-o", "--output",
-        help="Output path (extension inferred) or directory. Default: ./nveil_out/<slug>.<ext>",
-    )
-    p.add_argument(
-        "-f", "--format", choices=_VALID_FORMATS, default="html",
-        help="Output format. 'all' writes html + png + .nveil and prints the explanation.",
+        help=(
+            "Output path with optional format brackets. Examples: output.[all], output.[png], "
+            "output.[html,pdf]. Supported formats: html, png, nveil, jpg, svg, pdf, json. "
+            ".[all] writes all formats. Default: ./nveil_out/<slug>.html"
+        ),
     )
     p.add_argument(
         "--explain", action="store_true",
@@ -50,14 +52,73 @@ def _slug(text: str, max_len: int = 50) -> str:
     return s[:max_len] or "chart"
 
 
+def _parse_output(
+    raw: str | None, all_formats: tuple[str, ...],
+) -> tuple[str | None, tuple[str, ...] | None]:
+    """Parse --output value, returning (bracket_base, formats) or (None, None) on error.
+
+    bracket_base is None when no bracket syntax was used (plain path or no output).
+    formats is None when a validation error was printed.
+    """
+    if raw is None:
+        return None, ("html",)
+
+    m = _BRACKET_RE.match(raw)
+    if m:
+        base = m.group(1) or None
+        fmt_str = m.group(2).strip()
+        if fmt_str.lower() == "all":
+            return base, all_formats
+        formats = tuple(f.strip().lower() for f in fmt_str.split(",") if f.strip())
+        invalid = [f for f in formats if f not in _ALL_FORMATS]
+        if invalid:
+            print(
+                f"nveil: error: unsupported format(s): {invalid}. "
+                f"Choose from: {sorted(_ALL_FORMATS)}",
+                file=sys.stderr,
+            )
+            return None, None
+        return base, formats
+
+    # Plain path — validate extension if present
+    ext = Path(raw).suffix.lstrip(".").lower()
+    if ext:
+        if ext not in _ALL_FORMATS:
+            print(
+                f"nveil: error: unsupported extension '{ext}'. "
+                f"Choose from: {sorted(_ALL_FORMATS)}",
+                file=sys.stderr,
+            )
+            return None, None
+        return None, (ext,)
+
+    # No extension, no brackets — default html, treat as directory
+    return None, ("html",)
+
+
 def _resolve_output_paths(
-    output: str | None, prompt: str, formats: tuple[str, ...],
+    output: str | None,
+    prompt: str,
+    formats: tuple[str, ...],
+    bracket_base: str | None = None,
 ) -> dict[str, Path]:
     """Return {fmt: Path} for each requested format."""
+    if bracket_base is not None:
+        # Bracket syntax: base is a stem or directory prefix
+        base = Path(bracket_base) if bracket_base else None
+        if base is None or str(bracket_base).endswith("/") or str(bracket_base).endswith("\\"):
+            base_dir = base or Path("nveil_out")
+            stem = _slug(prompt)
+        else:
+            base_dir = base.parent if base.parent != Path(".") or base.name else Path(".")
+            stem = base.name if base.name else _slug(prompt)
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return {fmt: base_dir / f"{stem}.{fmt}" for fmt in formats}
+
     if output:
         out = Path(output)
         if out.suffix and len(formats) == 1:
-            # Explicit file path given — use it for the single format
+            # Explicit file path — use as-is for single format
             return {formats[0]: out}
         # Directory (or multi-format): fall through to stem-based naming
         base_dir = out if not out.suffix else out.parent
@@ -79,26 +140,32 @@ def run(args) -> int:
 
     import nveil  # picks up freshly-configured client
 
-    formats = ("html", "png", "nveil") if args.format == "all" else (args.format,)
-    out_paths = _resolve_output_paths(args.output, args.prompt, formats)
+    bracket_base, formats = _parse_output(args.output, _ALL_FORMATS)
+    if formats is None:
+        return 1
+
+    out_paths = _resolve_output_paths(args.output, args.prompt, formats, bracket_base)
 
     spec = nveil.generate_spec(args.prompt, data_path)
 
-    # .nveil output can be written from spec alone; html/png need a render.
+    # .nveil output can be written from spec alone; other formats need a render.
     if "nveil" in out_paths:
         spec.save(str(out_paths["nveil"]))
         print(str(out_paths["nveil"]))
 
-    if any(f in out_paths for f in ("html", "png")):
+    render_fmts = [f for f in out_paths if f != "nveil"]
+    if render_fmts:
         fig = spec.render(data_path)
         if "html" in out_paths:
             nveil.save_html(fig, str(out_paths["html"]))
             print(str(out_paths["html"]))
-        if "png" in out_paths:
-            nveil.save_image(fig, str(out_paths["png"]))
-            print(str(out_paths["png"]))
+        for fmt in render_fmts:
+            if fmt == "html":
+                continue
+            nveil.save_image(fig, str(out_paths[fmt]))
+            print(str(out_paths[fmt]))
 
-    if args.explain or args.format == "all":
+    if args.explain:
         print("---")
         print(spec.explanation)
     return 0
